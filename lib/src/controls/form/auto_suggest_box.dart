@@ -189,6 +189,8 @@ class AutoSuggestBox<T> extends StatefulWidget {
     this.enabled = true,
     this.inputFormatters,
     this.maxPopupHeight = kAutoSuggestBoxPopupMaxHeight,
+    this.enableMaxItemHeight = true,
+    this.forceShowItemsOnFocused = false,
   }) : autovalidateMode = AutovalidateMode.disabled,
        validator = null;
 
@@ -231,6 +233,8 @@ class AutoSuggestBox<T> extends StatefulWidget {
     this.enabled = true,
     this.inputFormatters,
     this.maxPopupHeight = kAutoSuggestBoxPopupMaxHeight,
+    this.enableMaxItemHeight = true,
+    this.forceShowItemsOnFocused = false,
   });
 
   /// The list of items to display to the user to pick
@@ -405,6 +409,22 @@ class AutoSuggestBox<T> extends StatefulWidget {
   /// than the available space, the box is limited to the available space.
   final double maxPopupHeight;
 
+  /// If false, [items] can be arbitrarily tall (not the default). If so and
+  /// an item is selected, that item must be the first item in [items] because
+  /// this can no longer automatically scroll to the item upon the user clicking
+  /// into the field.
+  ///
+  /// JACKSON THIS IS YOUR OWN hack TO MAKE SEARCHABLE DROPDOWN WORK BETTER!
+  /// DO NOT MERGE TO MAIN REPO!!!
+  final bool enableMaxItemHeight;
+
+  /// If true, this immediately shows the suggested items upon gaining focus
+  /// (as opposed to the default behavior of waiting until the user types).
+  ///
+  /// JACKSON THIS IS YOUR OWN hack TO MAKE SEARCHABLE DROPDOWN WORK BETTER!
+  /// DO NOT MERGE TO MAIN REPO!!!
+  final bool forceShowItemsOnFocused;
+
   @override
   State<AutoSuggestBox<T>> createState() => AutoSuggestBoxState<T>();
 
@@ -565,7 +585,7 @@ class AutoSuggestBoxState<T> extends State<AutoSuggestBox<T>> {
     final hasFocus = _focusNode.hasFocus;
     if (!hasFocus) {
       dismissOverlay();
-    } else if (_controller.text.isNotEmpty) {
+    } else if (widget.forceShowItemsOnFocused || _controller.text.isNotEmpty) {
       showOverlay();
     }
   }
@@ -655,6 +675,7 @@ class AutoSuggestBoxState<T> extends State<AutoSuggestBox<T>> {
                     );
                   },
                   noResultsFoundBuilder: widget.noResultsFoundBuilder,
+                  enableMaxItemHeight: widget.enableMaxItemHeight,
                 ),
               ),
             ),
@@ -897,6 +918,7 @@ class _AutoSuggestBoxOverlay<T> extends StatefulWidget {
     required this.sorter,
     required this.maxHeight,
     required this.noResultsFoundBuilder,
+    required this.enableMaxItemHeight,
     super.key,
   });
 
@@ -910,6 +932,7 @@ class _AutoSuggestBoxOverlay<T> extends StatefulWidget {
   final AutoSuggestBoxSorter<T> sorter;
   final double maxHeight;
   final WidgetBuilder? noResultsFoundBuilder;
+  final bool enableMaxItemHeight;
 
   @override
   State<_AutoSuggestBoxOverlay<T>> createState() =>
@@ -942,8 +965,9 @@ class _AutoSuggestBoxOverlayState<T> extends State<_AutoSuggestBoxOverlay<T>> {
 
       final theme = FluentTheme.of(context);
 
-      final currentSelectedOffset =
-          adjustedTileHeight(theme.visualDensity) * index;
+      final currentSelectedOffset = widget.enableMaxItemHeight
+          ? adjustedTileHeight(theme.visualDensity) * index
+          : 0.0;
 
       scrollController.animateTo(
         currentSelectedOffset,
@@ -1012,11 +1036,14 @@ class _AutoSuggestBoxOverlayState<T> extends State<_AutoSuggestBoxOverlay<T>> {
                           padding: const EdgeInsetsDirectional.only(bottom: 4),
                           child: _AutoSuggestBoxOverlayTile(
                             text: Text(localizations.noResultsFoundLabel),
+                            disableTextEntryAnimation: false,
                           ),
                         );
                   } else {
                     result = ListView.builder(
-                      itemExtent: adjustedTileHeight(theme.visualDensity),
+                      itemExtent: widget.enableMaxItemHeight
+                          ? adjustedTileHeight(theme.visualDensity)
+                          : null,
                       controller: scrollController,
                       key: ValueKey<int>(sortedItems.length),
                       shrinkWrap: true,
@@ -1030,6 +1057,8 @@ class _AutoSuggestBoxOverlayState<T> extends State<_AutoSuggestBoxOverlay<T>> {
                               semanticLabel: item.semanticLabel ?? item.label,
                               selected: item._selected || widget.node.hasFocus,
                               onSelected: () => widget.onSelected(item),
+                              disableTextEntryAnimation:
+                                  !widget.enableMaxItemHeight,
                             );
                       },
                     );
@@ -1048,6 +1077,7 @@ class _AutoSuggestBoxOverlayState<T> extends State<_AutoSuggestBoxOverlay<T>> {
 class _AutoSuggestBoxOverlayTile extends StatefulWidget {
   const _AutoSuggestBoxOverlayTile({
     required this.text,
+    required this.disableTextEntryAnimation,
     this.selected = false,
     this.onSelected,
     this.semanticLabel,
@@ -1057,6 +1087,7 @@ class _AutoSuggestBoxOverlayTile extends StatefulWidget {
   final VoidCallback? onSelected;
   final bool selected;
   final String? semanticLabel;
+  final bool disableTextEntryAnimation;
 
   @override
   State<_AutoSuggestBoxOverlayTile> createState() =>
@@ -1072,7 +1103,9 @@ class __AutoSuggestBoxOverlayTileState extends State<_AutoSuggestBoxOverlayTile>
     super.initState();
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 125),
+      duration: Duration(
+        milliseconds: widget.disableTextEntryAnimation ? 0 : 125,
+      ),
     )..forward();
   }
 
