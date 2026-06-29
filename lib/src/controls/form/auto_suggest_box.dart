@@ -468,7 +468,7 @@ class AutoSuggestBox<T> extends StatefulWidget {
   /// The default item sorter.
   ///
   /// This sorter will filter the items based on their label.
-  List<AutoSuggestBoxItem<T>> defaultItemSorter(
+  static List<AutoSuggestBoxItem<T>> defaultItemSorter<T>(
     String content,
     List<AutoSuggestBoxItem<T>> items,
   ) {
@@ -500,7 +500,7 @@ class AutoSuggestBoxState<T> extends State<AutoSuggestBox<T>> {
 
   /// The sorter function used to filter items based on the current text.
   AutoSuggestBoxSorter<T> get sorter =>
-      widget.sorter ?? widget.defaultItemSorter;
+      widget.sorter ?? AutoSuggestBox.defaultItemSorter;
 
   /// The size of the text box.
   ///
