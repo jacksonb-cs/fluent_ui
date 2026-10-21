@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show Icons;
+import 'package:material_ui/material_ui.dart' show Icons;
 
 /// A builder function for creating an [InfoBar] within a popup.
 ///
@@ -397,8 +397,9 @@ class InfoBar extends StatelessWidget {
     }();
     return Container(
       constraints: BoxConstraints(
-        minHeight: (48 + theme.visualDensity.baseSizeAdjustment.dy).clamp(
-          0.0,
+        minHeight: clampDouble(
+          48 + theme.visualDensity.baseSizeAdjustment.dy,
+          0,
           double.infinity,
         ),
       ),
@@ -607,6 +608,7 @@ class InfoBarThemeData with Diagnosticable {
             return FluentIcons.info_solid;
           case InfoBarSeverity.warning:
             return FluentIcons.critical_error_solid;
+          // TODO(fluent): Do not use Material Icons
           case InfoBarSeverity.success:
             return Icons.check_circle;
           case InfoBarSeverity.error:

@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 /// The title bar sits at the top of an app on the base layer. Its main purpose
@@ -150,7 +151,7 @@ class TitleBar extends StatelessWidget {
         onPanEnd: (_) => onDragEnded?.call(),
         onPanCancel: () => onDragCancelled?.call(),
         onPanUpdate: (_) => onDragUpdated?.call(),
-        onDoubleTap: () => onDoubleTap?.call(),
+        onDoubleTap: onDoubleTap,
         child: ConstrainedBox(
           constraints: BoxConstraints.tightFor(
             // according to documentation, increase the size of the title bar if
@@ -561,6 +562,25 @@ class _RenderTitleSubtitleOverflow extends RenderBox
       child = childAfter(child);
     }
   }
+
+  /// Skips hidden children when collecting semantics.
+  ///
+  /// Hidden children are never laid out (see [performLayout]). During a window
+  /// resize, a semantics walk can also run while a visible child is waiting for
+  /// its new constraints. Skipping both cases prevents Flutter from asserting
+  /// on `_needsLayout`.
+  @override
+  void visitChildrenForSemantics(RenderObjectVisitor visitor) {
+    var child = firstChild;
+    while (child != null) {
+      final childParentData =
+          child.parentData! as _TitleSubtitleOverflowParentData;
+      if (!childParentData.isHidden && !child.debugNeedsLayout) {
+        visitor(child);
+      }
+      child = childAfter(child);
+    }
+  }
 }
 
 /// The preferred position for the pane toggle button.
@@ -603,10 +623,14 @@ class PaneToggleButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final view = NavigationView.dataOf(context);
+    final navigationView = NavigationView.of(context);
     final fluentTheme = FluentTheme.of(context);
-    final paneItemHeight =
-        (kPaneItemMinHeight + fluentTheme.visualDensity.baseSizeAdjustment.dy)
-            .clamp(0.0, double.infinity);
+    final localizations = FluentLocalizations.of(context);
+    final paneItemHeight = clampDouble(
+      kPaneItemMinHeight + fluentTheme.visualDensity.baseSizeAdjustment.dy,
+      0,
+      double.infinity,
+    );
 
     final width = view.pane?.size?.compactWidth ?? kCompactNavigationPaneWidth;
     return Container(
@@ -618,7 +642,9 @@ class PaneToggleButton extends StatelessWidget {
         maxHeight: paneItemHeight,
       ),
       child: Tooltip(
-        message: 'Toggle navigation',
+        message: navigationView.isPaneOpen
+            ? localizations.closeNavigationTooltip
+            : localizations.openNavigationTooltip,
         child: IconButton(
           icon: const Icon(WindowsIcons.global_nav_button),
           onPressed:
@@ -663,9 +689,11 @@ class PaneBackButton extends StatelessWidget {
     final viewData = NavigationView.dataOf(context);
     final canPop = viewData.canPop;
     final fluentTheme = FluentTheme.of(context);
-    final paneItemHeight =
-        (kPaneItemMinHeight + fluentTheme.visualDensity.baseSizeAdjustment.dy)
-            .clamp(0.0, double.infinity);
+    final paneItemHeight = clampDouble(
+      kPaneItemMinHeight + fluentTheme.visualDensity.baseSizeAdjustment.dy,
+      0,
+      double.infinity,
+    );
 
     final width =
         viewData.pane?.size?.compactWidth ?? kCompactNavigationPaneWidth;

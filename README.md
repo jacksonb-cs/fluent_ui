@@ -33,7 +33,7 @@ See [this](https://github.com/flutter/flutter/issues/46481) for more info on the
 
 See also:
 
-- [Material UI for Flutter](hhttps://docs.flutter.dev/ui/widgets/material)
+- [Material UI for Flutter](https://docs.flutter.dev/ui/widgets/material)
 - [Cupertino UI for Flutter](https://docs.flutter.dev/ui/widgets/cupertino)
 - [MacOS UI for Flutter](https://github.com/GroovinChip/macos_ui)
 
@@ -47,7 +47,7 @@ Add the package to your dependencies:
 
 ```yaml
 dependencies:
-  fluent_ui: ^4.15.1
+  fluent_ui: ^4.17.0
 ```
 
 <p align="center">OR</p>

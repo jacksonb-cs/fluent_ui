@@ -930,9 +930,6 @@ class TextBox extends StatefulWidget {
         ),
       );
   }
-
-  static final TextMagnifierConfiguration _fluentMagnifierConfiguration =
-      TextMagnifier.adaptiveMagnifierConfiguration;
 }
 
 class _TextBoxState extends State<TextBox>
@@ -1376,7 +1373,7 @@ class _TextBoxState extends State<TextBox>
             expands: widget.expands,
             magnifierConfiguration:
                 widget.magnifierConfiguration ??
-                TextBox._fluentMagnifierConfiguration,
+                TextMagnifierConfiguration.disabled,
             // Only show the selection highlight when the text field is focused.
             selectionColor: _effectiveFocusNode.hasFocus
                 ? selectionColor
@@ -1609,9 +1606,11 @@ class _TextBoxState extends State<TextBox>
                   child: Container(
                     foregroundDecoration: foregroundDecoration,
                     constraints: BoxConstraints(
-                      minHeight:
-                          (32 + themeData.visualDensity.baseSizeAdjustment.dy)
-                              .clamp(0.0, double.infinity),
+                      minHeight: clampDouble(
+                        32 + themeData.visualDensity.baseSizeAdjustment.dy,
+                        0,
+                        double.infinity,
+                      ),
                     ),
                     child: _selectionGestureDetectorBuilder
                         .buildGestureDetector(

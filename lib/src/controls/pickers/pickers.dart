@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// The padding used on the content of [DatePicker] and [TimePicker]
@@ -401,7 +402,7 @@ class PickerState extends State<Picker> {
             y = 0;
           }
 
-          y = y.clamp(0.0, rootHeight);
+          y = clampDouble(y, 0, rootHeight);
 
           final theme = FluentTheme.of(context);
 
@@ -427,21 +428,32 @@ class PickerState extends State<Picker> {
                 width: width.toDouble(),
                 child: FadeTransition(
                   opacity: primary,
-                  child: Container(
-                    height: widget.pickerHeight,
-                    width: box.size.width,
-                    decoration: ShapeDecoration(
-                      color: theme.menuColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        side: BorderSide(
-                          color: theme.resources.surfaceStrokeColorFlyout,
-                          width: 0.6,
-                        ),
+                  child: Acrylic(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: BorderSide(
+                        color: theme.resources.surfaceStrokeColorFlyout,
+                        width: 0.6,
                       ),
                     ),
-                    child: MediaQuery.withNoTextScaling(
-                      child: widget.pickerContent(context),
+                    child: Container(
+                      height: widget.pickerHeight,
+                      width: box.size.width,
+                      decoration: ShapeDecoration(
+                        color: theme.menuColor.withValues(
+                          alpha: kMenuColorOpacity,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          side: BorderSide(
+                            color: theme.resources.surfaceStrokeColorFlyout,
+                            width: 0.6,
+                          ),
+                        ),
+                      ),
+                      child: MediaQuery.withNoTextScaling(
+                        child: widget.pickerContent(context),
+                      ),
                     ),
                   ),
                 ),

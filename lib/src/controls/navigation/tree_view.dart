@@ -1168,9 +1168,11 @@ class TreeViewState extends State<TreeView> with AutomaticKeepAliveClientMixin {
             primary: widget.scrollPrimary ?? (widget.shrinkWrap ? false : null),
             controller: widget.scrollController,
             shrinkWrap: widget.shrinkWrap,
-            // ignore: deprecated_member_use
-            cacheExtent: widget.cacheExtent,
-            scrollCacheExtent: widget.scrollCacheExtent,
+            scrollCacheExtent:
+                widget.scrollCacheExtent ??
+                (widget.cacheExtent != null
+                    ? ScrollCacheExtent.pixels(widget.cacheExtent!)
+                    : null),
             itemExtent: widget.itemExtent,
             addRepaintBoundaries: widget.addRepaintBoundaries,
             prototypeItem: widget.usePrototypeItem && _items.isNotEmpty
@@ -1432,12 +1434,14 @@ class _TreeViewItem extends StatelessWidget {
                 // Indentation and selection indicator for single selection mode.
                 Container(
                   constraints: BoxConstraints(
-                    minHeight:
-                        ((selectionMode == TreeViewSelectionMode.multiple
-                                    ? 28.0
-                                    : 26.0) +
-                                theme.visualDensity.baseSizeAdjustment.dy)
-                            .clamp(0.0, double.infinity),
+                    minHeight: clampDouble(
+                      (selectionMode == TreeViewSelectionMode.multiple
+                              ? 28.0
+                              : 26.0) +
+                          theme.visualDensity.baseSizeAdjustment.dy,
+                      0,
+                      double.infinity,
+                    ),
                   ),
                   padding: EdgeInsetsDirectional.only(
                     start: selectionMode == TreeViewSelectionMode.multiple
